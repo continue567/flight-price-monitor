@@ -2,30 +2,30 @@ name: Flight Price Monitor
 
 on:
   schedule:
-    # 每天 01:00 / 07:00 / 13:00 / 19:00 UTC（北京时间 09/15/21/03 点）
-    - cron: '0 1,7,13,19 * * *'
+    # 每天 01:00  UTC（北京时间 09/15/21/03 点）
+    - cron: '0 1 * * *'
   workflow_dispatch:
     inputs:
       from_code:
-        description: '出发地三字码 (如 LZO)'
+        description: '出发地三字码 (如 SZX)'
         required: true
-        default: 'LZO'
+        default: 'SZX'
       from_name:
-        description: '出发地名称 (如 泸州)'
+        description: '出发地名称 (如 深圳)'
         required: true
-        default: '泸州'
+        default: '深圳'
       to_code:
-        description: '目的地三字码 (如 BJS)'
+        description: '目的地三字码 (如 SHA)'
         required: true
-        default: 'BJS'
+        default: 'SHA'
       to_name:
-        description: '目的地名称 (如 北京)'
+        description: '目的地名称 (如 上海)'
         required: true
-        default: '北京'
+        default: '上海'
       depart_dates:
         description: '去程日期, 逗号分隔 (如 2026-09-30,2026-10-01)'
         required: true
-        default: '2026-09-30,2026-10-01,2026-10-02'
+        default: ''
       return_dates:
         description: '回程日期, 逗号分隔 (可选)'
         required: false
@@ -33,11 +33,11 @@ on:
       platforms:
         description: '平台: fliggy,tuniu,qunar,tongcheng,ctrip'
         required: false
-        default: 'fliggy,tuniu,qunar,tongcheng'
+        default: 'fliggy,qunar,tongcheng'
       threshold:
         description: '低价提醒阈值（元）'
         required: false
-        default: '0'
+        default: '500'
 
 permissions:
   contents: write
@@ -62,6 +62,31 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install chromium --with-deps
 
+      - name: Generate rolling 20-day dates
+        shell: bash
+        run: |
+          python - <<'PY'
+          from datetime import datetime, timedelta
+          from zoneinfo import ZoneInfo
+          import os
+
+          today = datetime.now(
+              ZoneInfo("Asia/Shanghai")
+          ).date()
+
+          dates = [
+              (today + timedelta(days=i)).isoformat()
+              for i in range(1, 21)
+          ]
+
+          value = ",".join(dates)
+
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"ROLLING_DATES={value}\n")
+
+          print("Monitoring dates:", value)
+          PY
+
       - name: Build config from workflow_dispatch or defaults
         run: |
           python scripts/build_config.py \
@@ -69,16 +94,16 @@ jobs:
             --from-name "${{ '深圳' }}" \
             --to-code "${{ 'SHA' }}" \
             --to-name "${{ '上海' }}" \
-            --dates "${{ '2026-10-26, 2026-10-27, 2026-10-28, 2026-10-29, 2026-10-30, 2026-11-02, 2026-11-03, 2026-11-04' }}" \
+            --dates "${{ env.ROLLING_DATES }}" \
             --return-dates "${{ github.event.inputs.return_dates }}" \
-            --platforms "${{ 'qunar,tongcheng' }}" \
+            --platforms "${{ 'fliggy,qunar,tongcheng' }}" \
             --threshold "${{ '500' }}" \
             --serverchan-key "${{ secrets.SERVERCHAN_KEY }}" \
             --output config.yaml
 
       - name: Run price monitor (one round)
         run: python main.py --once
-        timeout-minutes: 30
+        timeout-minutes: 45
 
       - name: Export latest results to JSON
         run: |
