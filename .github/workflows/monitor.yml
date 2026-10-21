@@ -72,7 +72,7 @@ jobs:
             --dates "${{ github.event.inputs.depart_dates || '2026-10-26, 2026-10-27, 2026-10-28, 2026-10-29, 2026-10-30, 2026-11-02, 2026-11-03, 2026-11-04' }}" \
             --return-dates "${{ github.event.inputs.return_dates }}" \
             --platforms "${{ github.event.inputs.platforms || 'qunar,tongcheng' }}" \
-            --threshold "${{ github.event.inputs.threshold || '0' }}" \
+            --threshold "${{ github.event.inputs.threshold || '500' }}" \
             --serverchan-key "${{ secrets.SERVERCHAN_KEY }}" \
             --output config.yaml
 
