@@ -29,7 +29,7 @@ on:
       return_dates:
         description: '回程日期, 逗号分隔 (可选)'
         required: false
-        default: '2026-10-06'
+        default: ''
       platforms:
         description: '平台: fliggy,tuniu,qunar,tongcheng,ctrip'
         required: false
@@ -65,20 +65,20 @@ jobs:
       - name: Build config from workflow_dispatch or defaults
         run: |
           python scripts/build_config.py \
-            --from-code "${{ github.event.inputs.from_code || 'LZO' }}" \
-            --from-name "${{ github.event.inputs.from_name || '泸州' }}" \
-            --to-code "${{ github.event.inputs.to_code || 'BJS' }}" \
-            --to-name "${{ github.event.inputs.to_name || '北京' }}" \
-            --dates "${{ github.event.inputs.depart_dates || '2026-09-30,2026-10-01,2026-10-02' }}" \
-            --return-dates "${{ github.event.inputs.return_dates || '2026-10-06' }}" \
-            --platforms "${{ github.event.inputs.platforms || 'fliggy,tuniu,qunar,tongcheng' }}" \
+            --from-code "${{ github.event.inputs.from_code || 'SZX' }}" \
+            --from-name "${{ github.event.inputs.from_name || '深圳' }}" \
+            --to-code "${{ github.event.inputs.to_code || 'SHA' }}" \
+            --to-name "${{ github.event.inputs.to_name || '上海' }}" \
+            --dates "${{ github.event.inputs.depart_dates || '2026-10-26, 2026-10-27, 2026-10-28, 2026-10-29, 2026-10-30, 2026-11-02, 2026-11-03, 2026-11-04' }}" \
+            --return-dates "${{ github.event.inputs.return_dates }}" \
+            --platforms "${{ github.event.inputs.platforms || 'qunar,tongcheng' }}" \
             --threshold "${{ github.event.inputs.threshold || '0' }}" \
             --serverchan-key "${{ secrets.SERVERCHAN_KEY }}" \
             --output config.yaml
 
       - name: Run price monitor (one round)
         run: python main.py --once
-        timeout-minutes: 15
+        timeout-minutes: 30
 
       - name: Export latest results to JSON
         run: |
