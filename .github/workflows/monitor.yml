@@ -24,7 +24,7 @@ on:
         default: '上海'
       depart_dates:
         description: '去程日期, 逗号分隔 (如 2026-09-30,2026-10-01)'
-        required: true
+        required: false
         default: ''
       return_dates:
         description: '回程日期, 逗号分隔 (可选)'
